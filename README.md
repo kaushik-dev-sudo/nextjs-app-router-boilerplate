@@ -11,6 +11,8 @@ A clean, production-ready Next.js boilerplate with TypeScript, Tailwind CSS v4, 
 - **shadcn/ui** - Beautiful, accessible components
 - **Radix UI** - Unstyled, accessible component primitives
 - **Dark Mode** - Full dark mode support with theme toggle
+- **React Hook Form** - Form validation with react-hook-form and Zod
+- **NextAuth.js** - Complete authentication solution
 - **List Components** - Ready-to-use list components
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
@@ -28,6 +30,10 @@ All dependencies are pre-configured and match the Cardinal project:
 - `framer-motion` - Animations
 - `lucide-react` - Icons
 - `react-toastify` - Toast notifications
+- `react-hook-form` - Form state management
+- `@hookform/resolvers` - Validation resolvers
+- `zod` - Schema validation
+- `next-auth` - Authentication library
 - And more...
 
 ## 🛠️ Getting Started
@@ -49,7 +55,21 @@ yarn install
 pnpm install
 ```
 
-2. Run the development server:
+2. Set up environment variables:
+
+Create a `.env.local` file in the root directory:
+
+```bash
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-here
+```
+
+Generate a secret with:
+```bash
+openssl rand -base64 32
+```
+
+3. Run the development server:
 
 ```bash
 npm run dev
@@ -59,26 +79,36 @@ yarn dev
 pnpm dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📁 Project Structure
 
 ```
 nextjs-app-router-boilerplate/
 ├── src/
-│   ├── app/              # Next.js App Router pages
-│   │   ├── layout.tsx   # Root layout
-│   │   ├── page.tsx     # Home page
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── api/               # API routes
+│   │   │   └── auth/          # NextAuth API routes
+│   │   ├── auth/              # Authentication pages
+│   │   │   └── signin/        # Sign in page
+│   │   ├── layout.tsx         # Root layout
+│   │   ├── page.tsx           # Home page
 │   │   └── not-found.tsx
-│   ├── components/      # React components
-│   │   └── ui/         # shadcn/ui components
-│   ├── lib/            # Utility functions
-│   └── styles/         # Global styles
-├── public/             # Static assets
-├── components.json     # shadcn/ui config
-├── next.config.ts      # Next.js config
-├── tsconfig.json       # TypeScript config
-└── package.json        # Dependencies
+│   ├── components/            # React components
+│   │   ├── auth/              # Auth components
+│   │   ├── forms/             # Form components
+│   │   ├── providers/         # Context providers
+│   │   └── ui/                # shadcn/ui components
+│   ├── lib/                   # Utility functions
+│   ├── types/                 # TypeScript type definitions
+│   ├── styles/                # Global styles
+│   ├── auth.ts                # NextAuth configuration
+│   └── middleware.ts          # Next.js middleware
+├── public/                    # Static assets
+├── components.json            # shadcn/ui config
+├── next.config.ts             # Next.js config
+├── tsconfig.json              # TypeScript config
+└── package.json               # Dependencies
 ```
 
 ## 🎨 Adding shadcn/ui Components
@@ -127,6 +157,110 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 // In your component
 const { theme, setTheme } = useTheme();
+```
+
+## 📝 React Hook Form
+
+Form validation is set up with react-hook-form and Zod:
+
+- **Example Form**: `src/components/forms/ExampleForm.tsx`
+- **Validation**: Zod schema validation
+- **Type Safety**: Full TypeScript support
+
+### Using React Hook Form
+
+Example usage:
+
+```tsx
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+function MyForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+  });
+
+  const onSubmit = (data: FormData) => {
+    console.log(data);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register("name")} />
+      {errors.name && <p>{errors.name.message}</p>}
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+## 🔐 NextAuth.js
+
+Authentication is configured with NextAuth.js:
+
+- **Configuration**: `src/auth.ts`
+- **API Route**: `src/app/api/auth/[...nextauth]/route.ts`
+- **Sign In Page**: `src/app/auth/signin/page.tsx`
+- **Middleware**: `src/middleware.ts`
+
+### Demo Credentials
+
+For testing purposes, use:
+- **Email**: `demo@example.com`
+- **Password**: `demo123`
+
+### Using NextAuth
+
+In your components:
+
+```tsx
+"use client";
+
+import { useSession, signIn, signOut } from "next-auth/react";
+
+function MyComponent() {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") return <p>Loading...</p>;
+  if (status === "unauthenticated") return <button onClick={() => signIn()}>Sign In</button>;
+
+  return (
+    <div>
+      <p>Signed in as {session?.user?.email}</p>
+      <button onClick={() => signOut()}>Sign Out</button>
+    </div>
+  );
+}
+```
+
+### Server Components
+
+In server components:
+
+```tsx
+import { auth } from "@/auth";
+
+export default async function ServerComponent() {
+  const session = await auth();
+
+  if (!session) {
+    return <p>Not authenticated</p>;
+  }
+
+  return <p>Hello, {session.user.email}!</p>;
+}
 ```
 
 ## 📝 Customization
