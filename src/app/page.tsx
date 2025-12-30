@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { List, ListItem, ListOrdered, ListItemIcon } from "@/components/ui/list";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { SignOutButton } from "@/components/auth/SignOutButton";
 import { ExampleForm } from "@/components/forms/ExampleForm";
 import { Rocket, Code, Zap, CheckCircle2, Shield, FormInput, LogIn } from "lucide-react";
 
@@ -14,31 +13,33 @@ export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-16">
-        {/* Header with Theme Toggle and Auth */}
-        <div className="flex justify-between items-start mb-8">
-          <div className="flex-1"></div>
-          <div className="flex items-center gap-4">
-            {status === "authenticated" && (
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <span>Signed in as: <strong>{session?.user?.email}</strong></span>
-              </div>
-            )}
-            {status === "authenticated" ? (
-              <SignOutButton />
-            ) : (
-              <Button onClick={() => router.push("/auth/signin")} variant="outline">
-                <LogIn className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
-            )}
+  // Show sign in button for unauthenticated users
+  if (status === "unauthenticated") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Welcome to NextApp
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            Please sign in to continue
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <Button onClick={() => router.push("/auth/signin")} size="lg">
+              <LogIn className="h-4 w-4 mr-2" />
+              Sign In
+            </Button>
             <ThemeToggle />
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Header */}
+  return (
+    <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="container mx-auto px-4 py-12">
+        {/* Page Title */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
             Next.js App Router Boilerplate
@@ -227,11 +228,6 @@ export default function Home() {
             </List>
           </CardContent>
         </Card>
-
-        {/* Footer */}
-        <div className="text-center mt-12 text-gray-500 dark:text-gray-400">
-          <p>Ready to build something amazing? Start editing <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">src/app/page.tsx</code></p>
-        </div>
       </div>
     </div>
   );
